@@ -1,0 +1,75 @@
+name: gamedoor-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gamedoor}
+      POSTGRES_USER: ${POSTGRES_USER:-gamedoor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      target: dev
+    restart: unless-stopped
+    command: sh -c "npm install && npm run develop"
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 1337
+      APP_KEYS: ${APP_KEYS:?APP_KEYS is required in .env}
+      API_TOKEN_SALT: ${API_TOKEN_SALT:?API_TOKEN_SALT is required in .env}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET is required in .env}
+      TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT:?TRANSFER_TOKEN_SALT is required in .env}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required in .env}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required in .env}
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${POSTGRES_DB:-gamedoor}
+      DATABASE_USERNAME: ${POSTGRES_USER:-gamedoor}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required in .env}
+      DATABASE_SSL: "true"
+    ports:
+      - "1337:1337"
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+      - strapi_uploads:/app/public/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    restart: unless-stopped
+    command: sh -c "npm install && npm run dev"
+    environment:
+      API_URL: ${API_URL:-http://backend:1337}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  strapi_uploads:
+  backend_node_modules:
+  frontend_node_modules:
