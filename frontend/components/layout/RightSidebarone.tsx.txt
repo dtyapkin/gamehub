@@ -1,0 +1,53 @@
+import nftsData from "@/data/nfts.json";
+import AdBanner from "../adbanner/page"; // Убедитесь, что путь верный
+import { getAdsForPage } from "@/lib/strapiAds";
+
+// 1. Добавляем проп page с дефолтным значением
+interface RightSidebarProps {
+  page?: string;
+}
+
+export async function RightSidebar({ page = "home" }: RightSidebarProps) {
+  // 2. Запрашиваем рекламу именно для этой страницы
+  const ads = await getAdsForPage(page);
+  const nfts = nftsData.nfts;
+
+  return (
+    <aside className="w-75 hidden xl:flex flex-col gap-4 sticky top-4 h-fit">
+      {/* Discover Banner */}
+      {/* <div className="bg-linear-to-br from-purple-700 to-indigo-900 rounded-2xl p-6 text-white">
+        <h2 className="text-2xl font-black leading-tight mb-1">DISCOVER.</h2>
+        <h2 className="text-2xl font-black leading-tight mb-1">PLAY.</h2>
+        <h2 className="text-2xl font-black leading-tight mb-3">
+          <span className="text-yellow-400">ENJOY!</span>
+        </h2>
+        <p className="text-sm text-white/80 mb-4">Fun • Easy • Free</p>
+        <button className="bg-white text-purple-700 font-bold px-5 py-2 rounded-full text-sm hover:bg-gray-100 transition-colors flex items-center gap-2">
+          <span className="text-red-500">▶</span> Play Now
+        </button>
+      </div> */}
+
+      {/* 3. Динамический рендер рекламы */}
+      {ads.top && (
+        <AdBanner
+          position="top"
+          page={page} // <-- Передаем динамическое значение!
+          blockId={ads.top}
+          // Убрал max-w-4xl mx-auto, так как в сайдбаре баннер должен занимать всю доступную ширину (w-full)
+          className="w-full"
+        />
+      )}
+
+      {/* 3. Динамический рендер рекламы */}
+      {ads.sidebar && (
+        <AdBanner
+          position="sidebar"
+          page={page} // <-- Передаем динамическое значение!
+          blockId={ads.sidebar}
+          // Убрал max-w-4xl mx-auto, так как в сайдбаре баннер должен занимать всю доступную ширину (w-full)
+          className="w-full"
+        />
+      )}
+    </aside>
+  );
+}

@@ -1,0 +1,58 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ad_placements",
+  "info": {
+    "singularName": "ad-placement",
+    "pluralName": "ad-placements",
+    "displayName": "AdPlacement"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "Page": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "home",
+        "all_games",
+        "trending",
+        "new_games",
+        "popular",
+        "categories",
+        "favorites",
+        "game_detail",
+        "best",
+        "boys",
+        "girls"
+      ]
+    },
+    "Position": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "top",
+        "infeed",
+        "bottom",
+        "sidebar_top",
+        "sidebar_bottom"
+      ]
+    },
+    "YandexBlockID": {
+      "type": "string",
+      "required": true
+    },
+    "YandexURL": {
+      "type": "string",
+      "required": true
+    },
+    "IsActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "Notes": {
+      "type": "text"
+    }
+  }
+}

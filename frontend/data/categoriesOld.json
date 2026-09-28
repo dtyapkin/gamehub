@@ -1,0 +1,70 @@
+{
+  "categories": [
+    {
+      "id": "1",
+      "slug": "action",
+      "cat": "Экшен",
+      "name": "Экшен",
+      "nameRu": "Экшен",
+      "icon": "Sword",
+      "color": "#8b5cf6",
+      "description": "Fast-paced games with combat and challenges",
+      "gameCount": 245
+    },
+    {
+      "id": "2",
+      "slug": "adventure",
+      "cat": "adventure",
+      "name": "Приключения",
+      "nameRu": "Приключения",
+      "icon": "Map",
+      "color": "#f97316",
+      "description": "Explore new worlds and solve mysteries",
+      "gameCount": 189
+    },
+    {
+      "id": "3",
+      "slug": "racing",
+      "cat": "racing",
+      "name": "Гонки",
+      "nameRu": "Гонки",
+      "icon": "Flag",
+      "color": "#3b82f6",
+      "description": "High-speed racing games",
+      "gameCount": 134
+    },
+    {
+      "id": "4",
+      "slug": "sports",
+      "cat": "sports",
+      "name": "Спорт",
+      "nameRu": "Спорт",
+      "icon": "Asterisk",
+      "color": "#22c55e",
+      "description": "Sports simulations and competitions",
+      "gameCount": 156
+    },
+    {
+      "id": "5",
+      "slug": "puzzle",
+      "cat": "puzzle",
+      "name": "Головоломки",
+      "nameRu": "Головоломки",
+      "icon": "Puzzle",
+      "color": "#ec4899",
+      "description": "Brain-teasing puzzle games",
+      "gameCount": 312
+    },
+    {
+      "id": "6",
+      "slug": "shooting",
+      "cat": "shooting",
+      "name": "Стрелялки",
+      "nameRu": "Стрелялки",
+      "icon": "Target",
+      "color": "#06b6d4",
+      "description": "First and third person shooters",
+      "gameCount": 198
+    }
+  ]
+}

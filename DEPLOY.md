@@ -24,52 +24,26 @@ docker run --rm hello-world    # проверка
 ## 2. Залить репозиторий
 
 ```bash
-git clone <твой-репозиторий> gamedoor
+git clone https://github.com/dtyapkin/gamehub.git gamedoor
 cd gamedoor
 ```
 
-`backend` и `frontend` — сабмодули, они приватные и подтягиваются по SSH.
-После `git clone` обязательно:
+Репозиторий публичный и самодостаточный: `backend` и `frontend` лежат
+внутри обычными каталогами, а не сабмодулями. Ни ключей, ни токенов,
+ни `git submodule update` не нужно — клонировал и собирай.
+
+Проверь, что всё на месте:
 
 ```bash
-git submodule update --init --recursive
+ls backend/config/server.ts frontend/package.json docker-compose.yml
 ```
 
-### Если сервер ещё не ходит в GitHub по SSH
+Если этих файлов нет, а клон был сделан до 26.09.2026 — он старый,
+сделай `git pull`.
 
-Без этого шага `git submodule update` остановится на `Permission denied
-(publickey)`, и сборка пойдёт вслепую: каталоги `backend/` и `frontend/`
-останутся пустыми.
-
-```bash
-# 1. Ключ на сервере (если ещё нет)
-ssh-keygen -t ed25519 -C "gamedoor-vps" -N ""
-
-# 2. Скопировать на GitHub КАК ДВА ОТДЕЛЬНЫХ КЛЮЧА
-#    (у одного ключа может быть только один deploy key)
-cat ~/.ssh/id_ed25519.pub
-```
-
-Добавь его в **оба** репозитория:
-`Settings → Deploy keys → Add deploy key`:
-- `dtyapkin/backend`
-- `dtyapkin/appgames`
-
-Галочку «Allow write access» ставить не нужно — сервер только читает.
-Для репозитория `gamehub` ключ не нужен, он публичный.
-
-Проверь, что всё сошлось:
-
-```bash
-ssh -T git@github.com
-git submodule update --init --recursive
-ls backend/config/server.ts frontend/package.json
-```
-
-Если `ssh -T` пишет `Hi <твой-юзер>!` — ключ принят.
-
-> Альтернатива: сделать `backend` и `appgames` публичными. Тогда SSH не
-> нужен вовсе, но исходный код станет общедоступным.
+> Старые приватные репозитории `dtyapkin/backend` и `dtyapkin/appgames`
+> остались как архив истории. В них больше ничего не нужно править:
+> все изменения теперь в этом репозитории.
 
 ---
 

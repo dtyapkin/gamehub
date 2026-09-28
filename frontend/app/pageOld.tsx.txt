@@ -1,0 +1,132 @@
+import { Sidebar } from "@/components/layout/Sidebar";
+import { Header } from "@/components/layout/Header";
+//import { RightSidebar } from "@/components/layout/RightSidebar";
+// import { FeaturedNft } from "@/components/games/FeaturedNft";
+import { GameRow } from "@/components/games/GameRow";
+import { GameGrid } from "@/components/games/GameGrid";
+import { CategoryCard } from "@/components/categories/CategoryCard";
+import { Footer } from "@/components/layout/Footer";
+import gamesData from "@/data/games.json";
+import categoriesData from "@/data/categories.json";
+import nftsData from "@/data/nfts.json";
+// import { FeaturedNft } from "@/components/games/FeaturedNft";
+import HeroBanner from "@/components/games/HeroBanner";
+// import AdBanner from "@/components/adbanner/page";
+// import YandexAd from "@/components/yandex/YandexAd";
+import { getAdsForPage } from "@/lib/strapiAds";
+import AdBanner from "@/components/adbanner/page";
+import { RightSidebar } from "@/components/layout/RighrSidebar";
+// import AdBanner from "@/components/adbanner/page";
+
+export default async function HomePage() {
+  const ads = await getAdsForPage("home");
+
+  // console.log("📢 РЕКЛАМА ИЗ STRAPI:", ads);
+  // 🔍 ОТЛАДКА: смотрим что пришло
+  console.log("📢 ADS FROM STRAPI:", ads);
+  console.log("📢 TOP BLOCK ID:", ads.top);
+  console.log(" BOTTOM BLOCK ID:", ads.bottom);
+
+  const games = gamesData.games;
+  const categories = categoriesData.categories;
+  const nfts = nftsData.nfts;
+
+  const trendingGames = games.filter((g) => g.isTrending);
+  const popularGames = games.filter((g) => g.isPopular);
+
+  return (
+    <div className="min-h-screen bg-dark">
+      <Header />
+
+      <div className="max-w-360 mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="flex gap-4 sm:gap-3">
+          {/* Left Sidebar — Desktop only */}
+          <div className="hidden lg:block shrink-0">
+            <Sidebar />
+          </div>
+
+          {/* Main Content */}
+          <main className="flex-1 min-w-0 p-3 mainTwo">
+            {/* Featured NFT — как на изображении */}
+            <div className="mb-0 sm:mb-0">
+              {/* <FeaturedNft nfts={nfts} /> */}
+            </div>
+            <div className="">
+              <HeroBanner />
+            </div>
+
+            {/* Trending Now */}
+            <GameRow
+              title="Игры в тренде"
+              games={trendingGames}
+              viewAllHref="/trending"
+            />
+
+            {/* Top Categories */}
+            <section className="mb-6 sm:mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg sm:text-xl font-bold text-white">
+                  Топ Категорий
+                </h2>
+                <a
+                  href="/categories"
+                  className="text-xs sm:text-sm text-primary-light hover:text-primary transition-colors flex items-center gap-1"
+                >
+                  Смотреть все <span>›</span>
+                </a>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4">
+                {categories.map((category) => (
+                  <CategoryCard key={category.id} category={category} />
+                ))}
+              </div>
+            </section>
+            {/* Ad Banner 2 - Bottom Position */}
+
+            {/* <AdBanner position="infeed" className="mb-8" /> */}
+            <AdBanner
+              position="top"
+              page="home"
+              blockId={ads.top}
+              className="w-full max-w-4xl mx-auto"
+            />
+
+            {/* Popular Games */}
+            <GameGrid
+              title="Популярные игры"
+              games={popularGames}
+              viewAllHref="/popular"
+            />
+
+            <GameGrid
+              title="Популярные игры"
+              games={popularGames}
+              viewAllHref="/popular"
+            />
+            {/* Ad Banner 2 - Bottom Position */}
+            {/* <AdBanner position="bottom" className="mb-8" /> */}
+            <AdBanner
+              position="bottom"
+              page="home"
+              blockId={ads.bottom}
+              className="w-full max-w-4xl mx-auto"
+            />
+
+            <GameGrid
+              title="Популярные игры"
+              games={popularGames}
+              viewAllHref="/popular"
+            />
+          </main>
+
+          {/* Right Sidebar — Desktop XL only */}
+          <div className="hidden xl:block shrink-0 main">
+            <RightSidebar />
+          </div>
+        </div>
+      </div>
+
+      <Footer />
+    </div>
+  );
+}
