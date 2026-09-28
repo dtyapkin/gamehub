@@ -67,7 +67,7 @@ docker compose config --quiet && echo "compose OK"
 |---|---|---|
 | `STRAPI_PUBLIC_URL` | `/` | адрес API, на котором Strapi строит ссылки |
 | `STRAPI_ADMIN_URL` | `/admin` | публичный URL админки |
-| `CORS_ORIGIN` | `*` | список доменов через запятую, либо `*` |
+| `CORS_ORIGIN` | `https://example.com` | список доменов через запятую. **Обязательно замени** |
 | `BACKEND_PORT` | `1337` | хостовый порт backend, поменяй если занят |
 | `FRONTEND_PORT` | `3000` | хостовый порт frontend, поменяй если занят |
 
@@ -78,8 +78,14 @@ docker compose config --quiet && echo "compose OK"
 ```env
 STRAPI_PUBLIC_URL=/
 STRAPI_ADMIN_URL=/admin
-CORS_ORIGIN=*
+CORS_ORIGIN=https://example.com
 ```
+
+Здесь CORS технически не нужен: браузер считает запросы на один домен
+своими. Но значение всё равно задано явно, чтобы при неудачной
+конфигурации маршрутизации (например, фронтенд неожиданно оказался на
+другом домене) ты получал явную ошибку в консоли браузера, а не
+молча открытый доступ с любого сайта.
 
 В Dockploy настрой один домен с правилами маршрутизации:
 - `/` → сервис `frontend`, порт 3000

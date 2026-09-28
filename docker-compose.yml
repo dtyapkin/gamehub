@@ -64,7 +64,10 @@ services:
       # укажи здесь полный URL, иначе после логина будет редирект внутрь docker-сети
       STRAPI_PUBLIC_URL: ${STRAPI_PUBLIC_URL:-/}
       STRAPI_ADMIN_URL: ${STRAPI_ADMIN_URL:-/admin}
-      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      # Обязательна, а не "по умолчанию *": молчаливая подстановка "*"
+      # открывала бы API с любого сайта, и это выглядело бы как
+      # рабочая настройка. Пусть лучше compose не стартует.
+      CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN is required in .env}
     volumes:
       - strapi_uploads:/app/public/uploads
 
