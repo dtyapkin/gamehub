@@ -18,6 +18,13 @@ export const metadata = {
 // генерация запекала бы пустую рекламу навсегда: страница отдавалась бы
 // без блоков. Принудительный рендер на каждый запрос решает это.
 export const dynamic = "force-dynamic";
+//
+// Альтернатива, если динамический рендер страниц начнёт мешать по скорости
+// (это касается 474 страниц игр): заменить force-dynamic на ISR. Страницы
+// снова собираются статически, реклама обновляется раз в час. Минус - первый
+// час после деплоя сайт будет без блоков. Одновременно с force-dynamic
+// revalidate использовать нельзя, Next.js на это ругается.
+// export const revalidate = 3600;
 export default async function AllGamesPage() {
   const games = gamesData.games;
   const ads = await getAdsForPage("all_games");
