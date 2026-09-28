@@ -13,6 +13,11 @@ export const metadata = {
   description: "Browse all available games",
 };
 
+// Реклама подтягивается из Strapi во время рендера страницы. На этапе
+// сборки переменная STRAPI_API_URL ещё недоступна, поэтому статическая
+// генерация запекала бы пустую рекламу навсегда: страница отдавалась бы
+// без блоков. Принудительный рендер на каждый запрос решает это.
+export const dynamic = "force-dynamic";
 export default async function AllGamesPage() {
   const games = gamesData.games;
   const ads = await getAdsForPage("all_games");

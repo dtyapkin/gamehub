@@ -12,6 +12,11 @@ import AdBanner from "@/components/adbanner/page";
 import { RightSidebar } from "@/components/layout/RighrSidebar";
 import { GameRow } from "@/components/games/GameRow";
 
+// Реклама подтягивается из Strapi во время рендера страницы. На этапе
+// сборки переменная STRAPI_API_URL ещё недоступна, поэтому статическая
+// генерация запекала бы пустую рекламу навсегда: страница отдавалась бы
+// без блоков. Принудительный рендер на каждый запрос решает это.
+export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const ads = await getAdsForPage("home");
 

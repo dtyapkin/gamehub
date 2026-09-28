@@ -9,6 +9,11 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import gamesData from "@/data/games.json";
 import { getAdsForPage } from "@/lib/strapiAds";
 
+// Реклама подтягивается из Strapi во время рендера страницы. На этапе
+// сборки переменная STRAPI_API_URL ещё недоступна, поэтому статическая
+// генерация запекала бы пустую рекламу навсегда: страница отдавалась бы
+// без блоков. Принудительный рендер на каждый запрос решает это.
+export const dynamic = "force-dynamic";
 export default async function BestPage() {
   const ads = await getAdsForPage("boys");
   const games = gamesData.games.filter((g) => g.isBoy);

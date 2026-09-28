@@ -59,6 +59,11 @@ export async function generateMetadata({ params }: GameDetailPageProps) {
   };
 }
 
+// Реклама подтягивается из Strapi во время рендера страницы. На этапе
+// сборки переменная STRAPI_API_URL ещё недоступна, поэтому статическая
+// генерация запекала бы пустую рекламу навсегда: страница отдавалась бы
+// без блоков. Принудительный рендер на каждый запрос решает это.
+export const dynamic = "force-dynamic";
 export default async function GameDetailPage({ params }: GameDetailPageProps) {
   const ads = await getAdsForPage("game_detail");
   const { slug } = await params;
