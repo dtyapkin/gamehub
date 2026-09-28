@@ -1,15 +1,35 @@
+# Имя проекта Compose. Оставлено как `gamehub` НАМЕРЕННО, хотя остальной
+# проект называется gamedoor: от `name:` зависит имя тома
+# gamehub_postgres_data. Смена переименует том и даст пустую БД -
+# придётся пересоздавать и заливать заново. Переименовывать имеет смысл
+# только вместе с миграцией данных, не ради косметики.
 name: gamehub
+
+# Ротация логов Docker. Без неё json-лог растёт бесконечно и на VPS
+# рано или поздно съедает весь диск. 10 файлов по 10 МБ на сервис.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-gamehub}
-      POSTGRES_USER: ${POSTGRES_USER:-gamehub}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required in .env}
+    # Портов наружу нет намеренно: наружу БД торчит только через
+    # сеть докера. Не пробрасывай 5432 на хост - это открытая точка входа.
+    logging: *default-logging
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # ВАЖНО: в postgres:18 том монтируется на /var/lib/postgresql, а не на
+      # /var/lib/postgresql/data. Со 18-го мажора образ хранит данные в
+      # подкаталоге с номером версии - старый путь образ считает
+      # "unused mount" и отказывается стартовать.
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
@@ -24,41 +44,78 @@ services:
       NODE_ENV: production
       HOST: 0.0.0.0
       PORT: 1337
-      APP_KEYS: ${APP_KEYS}
-      API_TOKEN_SALT: ${API_TOKEN_SALT}
-      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET}
-      TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT}
-      JWT_SECRET: ${JWT_SECRET}
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      APP_KEYS: ${APP_KEYS:?APP_KEYS is required in .env}
+      API_TOKEN_SALT: ${API_TOKEN_SALT:?API_TOKEN_SALT is required in .env}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET is required in .env}
+      TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT:?TRANSFER_TOKEN_SALT is required in .env}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required in .env}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required in .env}
       DATABASE_CLIENT: postgres
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
-      DATABASE_NAME: ${POSTGRES_DB:-gamehub}
-      DATABASE_USERNAME: ${POSTGRES_USER:-gamehub}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
+      DATABASE_NAME: ${POSTGRES_DB:?POSTGRES_DB is required in .env}
+      DATABASE_USERNAME: ${POSTGRES_USER:?POSTGRES_USER is required in .env}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required in .env}
+      # За реверс-прокси Dockploy/Traefik обязательно, см. config/server.ts.
+      # Без proxy:true админка собирает ссылки на внутренний http://backend:1337
+      STRAPI_BEHIND_PROXY: "true"
+      STRAPI_TELEMETRY_DISABLED: "true"
+      # Публичные адреса. Если Dockploy отдаёт /admin на отдельном поддомене,
+      # укажи здесь полный URL, иначе после логина будет редирект внутрь docker-сети
+      STRAPI_PUBLIC_URL: ${STRAPI_PUBLIC_URL:-/}
+      STRAPI_ADMIN_URL: ${STRAPI_ADMIN_URL:-/admin}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
     volumes:
       - strapi_uploads:/app/public/uploads
+
+    logging: *default-logging
+
+    ports:
+      # Порт на хосте настраивается через .env: на VPS 1337 может быть занят.
+      # Внутренний порт контейнера всегда 1337 - его меняет backend/config/server.ts.
+      - "${BACKEND_PORT:-1337}:1337"
+
     depends_on:
       postgres:
         condition: service_healthy
+
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:1337/_health"]
+      # Проверяем, отвечает ли Node.js сервер вообще. Коды < 500 (включая 403/404) считаются успехом.
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''http'').get(''http://127.0.0.1:1337/'', (res) => process.exit(res.statusCode < 500 ? 0 : 1)).on(''error'', () => process.exit(1))"',
+        ]
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 40s # Увеличили до 40 сек, чтобы Strapi точно успел применить все миграции при первом старте
 
   frontend:
     build:
       context: ./frontend
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:1337}
+      # ВАЖНО: код читает именно STRAPI_API_URL (frontend/lib/strapiAds.ts),
+      # а не NEXT_PUBLIC_API_URL. Это server-side переменная (runtime),
+      # поэтому её нужно передавать через environment, а не через build args.
+      # Внутри docker-сети адрес всегда http://backend:1337. Если фронт
+      # ходит в Strapi извне (например Next на другой машине) - укажи
+      # публичный URL здесь.
+      STRAPI_API_URL: ${STRAPI_API_URL:-http://backend:1337}
+      NEXT_TELEMETRY_DISABLED: "1"
     depends_on:
       backend:
         condition: service_healthy
+    logging: *default-logging
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 volumes:
   postgres_data:
