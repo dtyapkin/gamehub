@@ -188,18 +188,33 @@ bootstrap при старте — на чистой базе это происх
 репозитории: внутри них email администратора и хеши API-токенов,
 публиковать их нельзя.
 
-С локальной машины залей дамп на сервер:
+С локальной машины залей дамп на сервер. Рабочий каталог Dockploy
+узнаётся так:
 
 ```bash
-scp dumps/strapi-20260928-144952.dump user@server:/srv/gamedoor/dumps/
+docker inspect $(docker ps -q --filter name=frontend) \
+  --format '{{ index .Config.Labels "com.docker.compose.project.working_dir" }}'
 ```
 
-Дальше на сервере:
+Обычно это что-то вроде `/etc/dokploy/compose/<имя-проекта>/code`.
+Путь может пересоздаваться при пересоздании сервиса, поэтому дамп
+надёжнее держать **вне** рабочего каталога — тогда он переживёт
+передеплой:
 
 ```bash
-cd /srv/gamedoor
+# на сервере
+mkdir -p /root/gamedoor-dumps
+
+# с локальной машины
+scp dumps/strapi-20260928-144952.dump <твой-ssh-пользователь>@<ip-сервера>:/root/gamedoor-dumps/
+```
+
+Дальше на сервере (путь к репозиторию — из команды выше):
+
+```bash
+cd /etc/dokploy/compose/<имя-проекта>/code
 docker compose exec -T postgres pg_isready -U gamedoor   # убедиться, что БД поднята
-./scripts/db-restore.sh dumps/strapi-20260928-144952.dump gamedoor gamedoor
+./scripts/db-restore.sh /root/gamedoor-dumps/strapi-20260928-144952.dump gamedoor gamedoor
 ```
 
 Третьим и четвёртым аргументом явно передай имя базы и пользователя
@@ -208,6 +223,10 @@ docker compose exec -T postgres pg_isready -U gamedoor   # убедиться, �
 переменные заданы через интерфейс и такого файла там не будет — без
 явных аргументов скрипт подставит стандартные значения и не найдёт
 базу.
+
+Каталога `dumps/` в клоне нет: он в `.gitignore` (строка 8), поэтому
+перед копированием внутрь репозитория его нужно создать
+(`mkdir -p dumps`). Именно поэтому дамп лучше держать снаружи.
 
 Пароль для `pg_restore` не нужен: команда выполняется внутри контейнера
 под локальным пользователем Postgres.
@@ -222,8 +241,8 @@ docker compose exec postgres psql -U gamedoor -d gamedoor \
 Должно быть 84. В API отдаётся 42 — Strapi не отдаёт неопубликованные
 записи, так что это норма.
 
-> Путь к репозиторию Dockploy может отличаться от `/srv/gamedoor`.
-> Посмотри его в настройках сервиса.
+> Рабочий каталог Dockploy не `/srv/gamedoor` — узнаётся командой
+> `docker inspect` из Шага 6 и обычно лежит в `/etc/dokploy/compose/`.
 
 ---
 
