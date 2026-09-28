@@ -74,8 +74,13 @@ export async function getAdsForPage(page: string): Promise<Record<string, string
       }
     });
 
-    cachedAds = grouped;
-    cacheTime = now;
+    // Пустой результат НЕ кэшируем. Иначе ситуация "база ещё не
+    // мигрирована" залипает на час: контейнер закеширует {} и продолжит
+    // отдавать пустую рекламу даже после импорта данных.
+    if (Object.keys(grouped).length > 0) {
+      cachedAds = grouped;
+      cacheTime = now;
+    }
 
     return grouped[page] || {};
   } catch (error) {
