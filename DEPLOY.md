@@ -28,13 +28,48 @@ git clone <твой-репозиторий> gamedoor
 cd gamedoor
 ```
 
-> В проекте три вложенных git-репозитория (`backend`, `frontend` — сабмодули).
-> Если они лежат в репозитории как gitlink, после `git clone` выполни:
-> ```bash
-> git submodule update --init --recursive
-> ```
-> Если Dockploy клонирует по URL, проверь, что сабмодули подтянулись:
-> `ls backend/config/server.ts frontend/package.json` — файлы должны существовать.
+`backend` и `frontend` — сабмодули, они приватные и подтягиваются по SSH.
+После `git clone` обязательно:
+
+```bash
+git submodule update --init --recursive
+```
+
+### Если сервер ещё не ходит в GitHub по SSH
+
+Без этого шага `git submodule update` остановится на `Permission denied
+(publickey)`, и сборка пойдёт вслепую: каталоги `backend/` и `frontend/`
+останутся пустыми.
+
+```bash
+# 1. Ключ на сервере (если ещё нет)
+ssh-keygen -t ed25519 -C "gamedoor-vps" -N ""
+
+# 2. Скопировать на GitHub КАК ДВА ОТДЕЛЬНЫХ КЛЮЧА
+#    (у одного ключа может быть только один deploy key)
+cat ~/.ssh/id_ed25519.pub
+```
+
+Добавь его в **оба** репозитория:
+`Settings → Deploy keys → Add deploy key`:
+- `dtyapkin/backend`
+- `dtyapkin/appgames`
+
+Галочку «Allow write access» ставить не нужно — сервер только читает.
+Для репозитория `gamehub` ключ не нужен, он публичный.
+
+Проверь, что всё сошлось:
+
+```bash
+ssh -T git@github.com
+git submodule update --init --recursive
+ls backend/config/server.ts frontend/package.json
+```
+
+Если `ssh -T` пишет `Hi <твой-юзер>!` — ключ принят.
+
+> Альтернатива: сделать `backend` и `appgames` публичными. Тогда SSH не
+> нужен вовсе, но исходный код станет общедоступным.
 
 ---
 
