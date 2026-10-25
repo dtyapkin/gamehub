@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Script from "next/dist/client/script";
+import {
+  YandexMetricaProvider,
+  standardYMInitParameters,
+} from "@artginzburg/next-ym";
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -35,11 +39,13 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth" className={inter.variable}>
       <body className="bg-dark min-h-screen">
-        {children}
-        <Script
-          src="//an.yandex.ru/system/context.js"
-          strategy="afterInteractive"
-        />
+        <YandexMetricaProvider initParameters={standardYMInitParameters}>
+          {children}
+          <Script
+            src="//an.yandex.ru/system/context.js"
+            strategy="afterInteractive"
+          />
+        </YandexMetricaProvider>
       </body>
     </html>
   );
