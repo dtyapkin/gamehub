@@ -54,14 +54,14 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2 px-3 py-3 mb-2">
         <div className="flex text-center justify-center">
-          {/* <Image
+          <Image
             src="/logo.png"
             width={40}
             height={25}
             alt="logo"
             //fill
             className="object-cover w-auto h-auto"
-          /> */}
+          />
         </div>
         {/* <Gamepad2 className="w-5 h-5 text-white" /> */}
 
